@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Block Renderer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            background-color: #333;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls input, .controls button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minecraft Block Renderer</h1>
+    <p>Upload a texture image, and render it as a Minecraft-style block!</p>
+    <input type="file" id="textureInput" accept="image/*">
+    <canvas id="renderCanvas" width="512" height="512"></canvas>
+    <div class="controls">
+        <button onclick="downloadRender()">Download Render</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, cube;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('renderCanvas'), preserveDrawingBuffer: true });
+            renderer.setSize(512, 512);
+            camera.position.z = 2;
+
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(1, 1, 1).normalize();
+            scene.add(light);
+
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const defaultTexture = new THREE.TextureLoader().load('https://via.placeholder.com/256');
+            const material = new THREE.MeshStandardMaterial({ map: defaultTexture });
+            
+            cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            cube.rotation.y += 0.01; // Slowly rotate the cube for a dynamic preview
+            renderer.render(scene, camera);
+        }
+
+        document.getElementById('textureInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const textureLoader = new THREE.TextureLoader();
+                    const texture = textureLoader.load(e.target.result);
+                    cube.material.map = texture;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function downloadRender() {
+            const link = document.createElement('a');
+            link.download = 'Minecraft_Block_Render.png';
+            link.href = document.getElementById('renderCanvas').toDataURL();
+            link.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
